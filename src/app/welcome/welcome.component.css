@@ -1,0 +1,15 @@
+
+
+section {
+  height: 300px;
+  width: 300px;
+  margin: 10px;
+}
+
+h1 {
+  text-align: center
+}
+
+p {
+  text-align: justify;
+}

@@ -1,7 +1,6 @@
 <mat-toolbar color="primary" fxLayout="row">
     <div>
       <button mat-icon-button (click)="onClose()" fxHide.gt-xs>
-        <!-- fxHide.gt-xs-->
         <mat-icon>menu</mat-icon>
       </button>
     </div>
@@ -12,6 +11,6 @@
       <a class="nav-link" color="primary" mat-raised-button routerLink="/training" *ngIf="isAuth">Training</a>
       <a class="nav-link" color="primary" mat-raised-button routerLink="/login" *ngIf="!isAuth">Login</a>
       <a class="nav-link" color="primary" mat-raised-button routerLink="/signup" *ngIf="!isAuth">Signup</a>
-      <a class="nav-link" color="primary" mat-raised-button *ngIf="isAuth">Logout</a>
+      <a class="nav-link" color="primary" mat-raised-button (click)="logout()"  *ngIf="isAuth">Logout</a>
     </div>
   </mat-toolbar>

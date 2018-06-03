@@ -28,4 +28,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.closeSidenave.emit();
   }
 
+  logout() {
+    this.authService.logout();
+  }
+
 }

@@ -1,16 +1,16 @@
 <mat-toolbar color="primary" fxLayout="row">
     <div>
-      <button mat-icon-button (click)="onClose()">
-        <!-- fxHide.gt-xs-->
+      <button mat-icon-button (click)="onClose()" fxHide.gt-xs>
         <mat-icon>menu</mat-icon>
       </button>
     </div>
 
     <div>LOGO</div>
     <div fxFlex="1 1 100%" fxLayout="row" fxLayoutGap="5px" fxLayoutAlign="end center" fxHide.xs>
-      <a class="nav-link" color="primary" mat-raised-button routerLink="/">Home</a>
-      <a class="nav-link" color="primary" mat-raised-button routerLink="/signup">Signup</a>
-      <a class="nav-link" color="primary" mat-raised-button routerLink="/login">Login</a>
-      <a class="nav-link" color="primary" mat-raised-button routerLink="/training">Training</a>
+      <a class="nav-link" color="primary" mat-raised-button routerLink="/" *ngIf="isAuth">Home</a>
+      <a class="nav-link" color="primary" mat-raised-button routerLink="/training" *ngIf="isAuth">Training</a>
+      <a class="nav-link" color="primary" mat-raised-button routerLink="/login" *ngIf="!isAuth">Login</a>
+      <a class="nav-link" color="primary" mat-raised-button routerLink="/signup" *ngIf="!isAuth">Signup</a>
+      <a class="nav-link" color="primary" mat-raised-button (click)="logout()"  *ngIf="isAuth">Logout</a>
     </div>
   </mat-toolbar>

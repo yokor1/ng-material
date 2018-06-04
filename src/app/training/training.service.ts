@@ -15,7 +15,7 @@ export class TrainingService {
 
   private runningExercise: Exercise;
   exerciseChanged = new Subject<Exercise>();
-  private exercises: Exercise[] = [];
+  exercises: Exercise[] = [];
 
   constructor() { }
 
@@ -57,5 +57,9 @@ export class TrainingService {
     }, this.runningExercise));
     this.runningExercise = null;
     this.exerciseChanged.next(null);
+  }
+
+  getPastExercises() {
+    return this.exercises.slice();
   }
 }

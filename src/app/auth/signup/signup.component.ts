@@ -22,6 +22,8 @@ export class SignupComponent implements OnInit {
     this.authService.registerUser({
       email: form.value.email,
       password: form.value.password
+    }).catch(error => {
+      alert(error.message);
     });
   }
 

@@ -20,6 +20,7 @@ export class AuthService {
     private snackBar: MatSnackBar) { }
 
   initAuthLestner() {
+    console.log('initAuthLestner');
     this.fbAuth.authState.subscribe(user => {
       if (user) {
         this.isAuthenticated = true;
@@ -30,22 +31,24 @@ export class AuthService {
         this.authChange.next(false);
         this.router.navigate(['/login']);
       }
-    });
+    }, error => this.snackBar.open(error.message, null, {
+      duration: 3000
+    }));
   }
 
   registerUser(authData: AuthData): Promise<any> {
     return this.fbAuth.auth
     .createUserWithEmailAndPassword(authData.email, authData.password)
-    .catch(error => this.snackBar.open(error.message, null, {
-      duration: 3000
+    .catch(error => this.snackBar.open('No connection', null, {
+      duration: 4000
     }));
   }
 
   login(authData: AuthData): Promise<any> {
     return this.fbAuth.auth
     .signInWithEmailAndPassword(authData.email, authData.password)
-    .catch(error => this.snackBar.open(error.message, null, {
-      duration: 3000
+    .catch(error => this.snackBar.open('No connection', null, {
+      duration: 4000
     }));
   }
 

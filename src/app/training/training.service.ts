@@ -4,6 +4,7 @@ import { Subject, Observable, Subscription, Timestamp } from 'rxjs';
 import { AngularFirestore } from 'angularfire2/firestore';
 import { map } from 'rxjs/operators';
 import { ExerciseWithTimestamp } from './exercise-with-timestamp';
+import { MatSnackBar } from '@angular/material';
 
 @Injectable({
   providedIn: 'root'
@@ -19,7 +20,7 @@ export class TrainingService {
   availableExercisesSubscription: Subscription;
   pastExercisesSubscription: Subscription;
 
-  constructor(private db: AngularFirestore) { }
+  constructor(private db: AngularFirestore, private snackBar: MatSnackBar) { }
 
   fetchAvailableExercises(): void {
     this.availableExercisesSubscription = this.db.collection('availableExercises')
@@ -33,6 +34,11 @@ export class TrainingService {
       .subscribe((exercises: Exercise[]) => {
         this.availableExercises = exercises;
         this.exercisesChanged.next([...this.availableExercises]);
+      }, error => {
+        console.log(error);
+        this.snackBar.open(error.message, null, {
+          duration: 3000
+        });
       });
     }
 
@@ -79,7 +85,13 @@ export class TrainingService {
       map((exercises: ExerciseWithTimestamp[]) =>
        exercises.map((exercise: ExerciseWithTimestamp) => this.exerciseWithTimestampToExercise(exercise)))
       )
-      .subscribe((result: Exercise[]) => this.pastExercisesChanged.next([...result]));
+      .subscribe((result: Exercise[]) => this.pastExercisesChanged.next([...result]),
+       error => {
+        console.log(error);
+        this.snackBar.open(error.message, null, {
+          duration: 3000
+        });
+      });
   }
 
   private addDateToDatabase(exercise: Exercise) {

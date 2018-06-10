@@ -9,6 +9,7 @@ import { AuthService } from '../auth.service';
 })
 export class LoginComponent implements OnInit {
   loginForm: FormGroup;
+  isLoading = false;
 
   constructor(private authService: AuthService) {
   }
@@ -25,12 +26,19 @@ export class LoginComponent implements OnInit {
   }
 
   onSubmit(form: NgForm) {
+    this.isLoading = true;
     this.authService.login({
       email: form.value.email,
       password: form.value.password
-    }).catch(error => {
-      alert(error.message);
-    });
+    })
+    .then(result => {
+      this.isLoading = false;
+    })
+    .catch(
+      result => {
+        this.isLoading = false;
+      }
+    );
   }
 
 }

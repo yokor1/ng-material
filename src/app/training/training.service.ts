@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
 import { Exercise } from './exercise.model';
-import { Subject, Observable, Subscription } from 'rxjs';
+import { Subject, Observable, Subscription, Timestamp } from 'rxjs';
 import { AngularFirestore } from 'angularfire2/firestore';
 import { map } from 'rxjs/operators';
+import { ExerciseWithTimestamp } from './exercise-with-timestamp';
 
 @Injectable({
   providedIn: 'root'
@@ -10,8 +11,8 @@ import { map } from 'rxjs/operators';
 export class TrainingService {
   private availableExercises: Exercise[] = [];
   private runningExercise: Exercise;
-  private exercises: Exercise[] = [];
 
+  pastExercisesChanged = new Subject<Exercise[]>();
   exerciseChanged = new Subject<Exercise>();
   exercisesChanged = new Subject<Exercise[]>();
 
@@ -49,7 +50,7 @@ export class TrainingService {
   }
 
   completeExercise() {
-    this.exercises.push(Object.assign({
+    this.addDateToDatabase(Object.assign({
       date: new Date(),
       state: 'completed'
     }, this.runningExercise));
@@ -58,7 +59,7 @@ export class TrainingService {
   }
 
   cancelExercise(progress: number) {
-    this.exercises.push(Object.assign({
+    this.addDateToDatabase(Object.assign({
       duration: this.runningExercise.duration * (progress / 100),
       calories: this.runningExercise.calories * (progress / 100),
       date: new Date(),
@@ -68,7 +69,39 @@ export class TrainingService {
     this.exerciseChanged.next(null);
   }
 
-  getPastExercises() {
-    return this.exercises.slice();
+  fetchPastExercises(): Subscription {
+    return this.db.collection('finishedExercise')
+    .valueChanges()
+    .pipe(
+      map((exercises: ExerciseWithTimestamp[]) =>
+       exercises.map((exercise: ExerciseWithTimestamp) => this.exerciseWithTimestampToExercise(exercise)))
+    )
+    .subscribe((result: Exercise[]) => this.pastExercisesChanged.next([...result]));
+  }
+
+  private addDateToDatabase(exercise: Exercise) {
+    this.db.collection('finishedExercise').add(this.exerciseToExerciseWithTimestamp(exercise));
+  }
+
+  private exerciseToExerciseWithTimestamp(exercise: Exercise): ExerciseWithTimestamp {
+    return  {
+      id: exercise.id,
+      name: exercise.name,
+      duration: exercise.duration,
+      calories: exercise.calories,
+      state: exercise.state,
+      date: exercise.date.getTime()
+    };
+  }
+
+  private exerciseWithTimestampToExercise(exercise: ExerciseWithTimestamp): Exercise {
+    return  {
+      id: exercise.id,
+      name: exercise.name,
+      duration: exercise.duration,
+      calories: exercise.calories,
+      state: exercise.state,
+      date: new Date(exercise.date)
+    };
   }
 }

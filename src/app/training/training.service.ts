@@ -16,34 +16,37 @@ export class TrainingService {
   exerciseChanged = new Subject<Exercise>();
   exercisesChanged = new Subject<Exercise[]>();
 
+  availableExercisesSubscription: Subscription;
+  pastExercisesSubscription: Subscription;
+
   constructor(private db: AngularFirestore) { }
 
-  fetchAvailableExercises(): Subscription {
-    return this.db.collection('availableExercises')
+  fetchAvailableExercises(): void {
+    this.availableExercisesSubscription = this.db.collection('availableExercises')
     .snapshotChanges()
     .pipe(
       map(docs => docs
         .map(doc => Object.assign({
-        id: doc.payload.doc.id
-      }, doc.payload.doc.data())))
-    )
-    .subscribe((exercises: Exercise[]) => {
-      this.availableExercises = exercises;
-      this.exercisesChanged.next([...this.availableExercises]);
-    });
-  }
+          id: doc.payload.doc.id
+        }, doc.payload.doc.data())))
+      )
+      .subscribe((exercises: Exercise[]) => {
+        this.availableExercises = exercises;
+        this.exercisesChanged.next([...this.availableExercises]);
+      });
+    }
 
-  startExercise(selectedId: string) {
-    this.runningExercise = this.getExerciseById(selectedId);
-    this.exerciseChanged.next(Object.assign({}, this.runningExercise));
-  }
+    startExercise(selectedId: string) {
+      this.runningExercise = this.getExerciseById(selectedId);
+      this.exerciseChanged.next(Object.assign({}, this.runningExercise));
+    }
 
-  private getExerciseById(selectedId: string): Exercise {
+    private getExerciseById(selectedId: string): Exercise {
 
-    const foundExercise = this.availableExercises
-    .find(exercise => exercise.id === selectedId);
-    return foundExercise;
-  }
+      const foundExercise = this.availableExercises
+      .find(exercise => exercise.id === selectedId);
+      return foundExercise;
+    }
 
   getRunningExercise(): Exercise {
     return Object.assign({}, this.runningExercise);
@@ -69,14 +72,14 @@ export class TrainingService {
     this.exerciseChanged.next(null);
   }
 
-  fetchPastExercises(): Subscription {
-    return this.db.collection('finishedExercise')
+  fetchPastExercises(): void {
+    this.pastExercisesSubscription = this.db.collection('finishedExercise')
     .valueChanges()
     .pipe(
       map((exercises: ExerciseWithTimestamp[]) =>
        exercises.map((exercise: ExerciseWithTimestamp) => this.exerciseWithTimestampToExercise(exercise)))
-    )
-    .subscribe((result: Exercise[]) => this.pastExercisesChanged.next([...result]));
+      )
+      .subscribe((result: Exercise[]) => this.pastExercisesChanged.next([...result]));
   }
 
   private addDateToDatabase(exercise: Exercise) {
@@ -103,5 +106,13 @@ export class TrainingService {
       state: exercise.state,
       date: new Date(exercise.date)
     };
+  }
+
+  unsubscribeFromAvailableExercises(): any {
+    this.availableExercisesSubscription.unsubscribe();
+  }
+
+  unsubscribeFromPastExercises(): any {
+    this.pastExercisesSubscription.unsubscribe();
   }
 }

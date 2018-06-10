@@ -13,14 +13,13 @@ import { map, flatMap } from 'rxjs/operators';
 })
 export class NewTrainingComponent implements OnInit, OnDestroy {
   exercises: Exercise[];
-  exercisesChanged: Subscription;
 
   constructor(
     private trainingService: TrainingService
   ) {}
 
   ngOnInit() {
-    this.exercisesChanged = this.trainingService.exercisesChanged
+    this.trainingService.exercisesChanged
     .subscribe(exercises => this.exercises = exercises);
 
     this.trainingService.fetchAvailableExercises();
@@ -32,6 +31,6 @@ export class NewTrainingComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.exercisesChanged.unsubscribe();
+    this.trainingService.unsubscribeFromAvailableExercises();
   }
 }

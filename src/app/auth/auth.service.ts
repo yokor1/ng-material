@@ -32,7 +32,7 @@ export class AuthService {
         this.router.navigate(['/login']);
       }
     }, error => this.snackBar.open(error.message, null, {
-      duration: 3000
+      duration: 4000
     }));
   }
 

@@ -9,6 +9,7 @@ import { AuthService } from '../auth.service';
 })
 export class SignupComponent implements OnInit {
   maxDate: Date;
+  isLoading = false;
 
   constructor(private authService: AuthService) {
   }
@@ -19,12 +20,18 @@ export class SignupComponent implements OnInit {
   }
 
   onSubmit(form: NgForm): void {
+    this.isLoading = true;
     this.authService.registerUser({
       email: form.value.email,
       password: form.value.password
-    }).catch(error => {
-      alert(error.message);
-    });
+    }).then(result => {
+      this.isLoading = false;
+    })
+    .catch(
+      result => {
+        this.isLoading = false;
+      }
+    );
   }
 
 }

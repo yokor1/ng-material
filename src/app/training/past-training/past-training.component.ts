@@ -11,7 +11,6 @@ import { map } from 'rxjs/operators';
   styleUrls: ['./past-training.component.css']
 })
 export class PastTrainingComponent implements OnInit, AfterViewInit, OnDestroy {
-  pastExercisesSubscription: Subscription;
   displayedColumns = ['date', 'name', 'duration', 'calories', 'state'];
   dataSource = new MatTableDataSource<Exercise>();
   @ViewChild(MatSort) sort: MatSort;
@@ -21,7 +20,7 @@ export class PastTrainingComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.pastExercisesSubscription = this.trainingService
+    this.trainingService
     .pastExercisesChanged
     .subscribe(result => this.dataSource.data = result);
     this.trainingService.fetchPastExercises();
@@ -36,6 +35,6 @@ export class PastTrainingComponent implements OnInit, AfterViewInit, OnDestroy {
     this.dataSource.filter = filterValue.trim().toLowerCase();
   }
   ngOnDestroy(): void {
-    this.pastExercisesSubscription.unsubscribe();
+    this.trainingService.unsubscribeFromPastExercises();
   }
 }

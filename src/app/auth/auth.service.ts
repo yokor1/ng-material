@@ -3,48 +3,48 @@ import { User } from './user.model';
 import { AuthData } from './auth-data.model';
 import { Subject } from 'rxjs';
 import { Router } from '@angular/router';
+import { FirebaseAuth } from 'angularfire2';
+import { AngularFireAuth } from 'angularfire2/auth';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
   authChange = new Subject<boolean>();
-  private user: User;
+  private isAuthenticated = false;
+  private token: string;
 
-  constructor(private router: Router) { }
+  constructor(private router: Router, private fbAuth: AngularFireAuth) { }
 
-  registerUser(authData: AuthData) {
-    this.user = {
-      email: authData.email,
-      userId: Math.round(Math.random() * 10000).toString()
-    };
-    this.authSuccessfully();
+  initAuthLestner() {
+    this.fbAuth.authState.subscribe(user => {
+      if (user) {
+        this.isAuthenticated = true;
+        this.authChange.next(true);
+        this.router.navigate(['/']);
+      } else {
+        this.isAuthenticated = false;
+        this.authChange.next(false);
+        this.router.navigate(['/login']);
+      }
+    });
   }
 
-  login(authData: AuthData) {
-    this.user = {
-      email: authData.email,
-      userId: Math.round(Math.random() * 10000).toString()
-    };
-    this.authSuccessfully();
+  registerUser(authData: AuthData): Promise<any> {
+    return this.fbAuth.auth
+    .createUserWithEmailAndPassword(authData.email, authData.password);
+  }
+
+  login(authData: AuthData): Promise<any> {
+    return this.fbAuth.auth
+    .signInWithEmailAndPassword(authData.email, authData.password);
   }
 
   logout() {
-    this.user = null;
-    this.authChange.next(false);
-    this.router.navigate(['/login']);
-  }
-
-  getUser() {
-    return Object.assign({}, this.user);
+    this.fbAuth.auth.signOut();
   }
 
   isAuth() {
-    return this.user != null;
-  }
-
-  private authSuccessfully() {
-    this.authChange.next(true);
-    this.router.navigate(['/']);
+    return this.isAuthenticated;
   }
 }

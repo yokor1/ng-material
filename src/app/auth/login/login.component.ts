@@ -28,8 +28,6 @@ export class LoginComponent implements OnInit {
     this.authService.login({
       email: form.value.email,
       password: form.value.password
-    }).catch(error => {
-      alert(error.message);
     });
   }
 

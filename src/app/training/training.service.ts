@@ -1,26 +1,36 @@
 import { Injectable } from '@angular/core';
 import { Exercise } from './exercise.model';
-import { Subject } from 'rxjs';
+import { Subject, Observable, Subscription, Timestamp } from 'rxjs';
+import { AngularFirestore } from 'angularfire2/firestore';
+import { map } from 'rxjs/operators';
+import { ExerciseWithTimestamp } from './exercise-with-timestamp';
 
 @Injectable({
   providedIn: 'root'
 })
 export class TrainingService {
-  availableExercises: Exercise[] = [
-    { id: 'crunches', name: 'Crunches', duration: 30, calories: 8 },
-    { id: 'touch-toes', name: 'Touch Toes', duration: 180, calories: 15 },
-    { id: 'side-lunges', name: 'Side Lunges', duration: 120, calories: 18 },
-    { id: 'burpees', name: 'Burpees', duration: 60, calories: 8 }
-  ];
-
+  private availableExercises: Exercise[] = [];
   private runningExercise: Exercise;
+
+  pastExercisesChanged = new Subject<Exercise[]>();
   exerciseChanged = new Subject<Exercise>();
-  exercises: Exercise[] = [];
+  exercisesChanged = new Subject<Exercise[]>();
 
-  constructor() { }
+  constructor(private db: AngularFirestore) { }
 
-  getAvailableExercises(): Exercise[] {
-    return this.availableExercises.slice();
+  fetchAvailableExercises(): Subscription {
+    return this.db.collection('availableExercises')
+    .snapshotChanges()
+    .pipe(
+      map(docs => docs
+        .map(doc => Object.assign({
+        id: doc.payload.doc.id
+      }, doc.payload.doc.data())))
+    )
+    .subscribe((exercises: Exercise[]) => {
+      this.availableExercises = exercises;
+      this.exercisesChanged.next([...this.availableExercises]);
+    });
   }
 
   startExercise(selectedId: string) {
@@ -40,7 +50,7 @@ export class TrainingService {
   }
 
   completeExercise() {
-    this.exercises.push(Object.assign({
+    this.addDateToDatabase(Object.assign({
       date: new Date(),
       state: 'completed'
     }, this.runningExercise));
@@ -49,7 +59,7 @@ export class TrainingService {
   }
 
   cancelExercise(progress: number) {
-    this.exercises.push(Object.assign({
+    this.addDateToDatabase(Object.assign({
       duration: this.runningExercise.duration * (progress / 100),
       calories: this.runningExercise.calories * (progress / 100),
       date: new Date(),
@@ -59,7 +69,39 @@ export class TrainingService {
     this.exerciseChanged.next(null);
   }
 
-  getPastExercises() {
-    return this.exercises.slice();
+  fetchPastExercises(): Subscription {
+    return this.db.collection('finishedExercise')
+    .valueChanges()
+    .pipe(
+      map((exercises: ExerciseWithTimestamp[]) =>
+       exercises.map((exercise: ExerciseWithTimestamp) => this.exerciseWithTimestampToExercise(exercise)))
+    )
+    .subscribe((result: Exercise[]) => this.pastExercisesChanged.next([...result]));
+  }
+
+  private addDateToDatabase(exercise: Exercise) {
+    this.db.collection('finishedExercise').add(this.exerciseToExerciseWithTimestamp(exercise));
+  }
+
+  private exerciseToExerciseWithTimestamp(exercise: Exercise): ExerciseWithTimestamp {
+    return  {
+      id: exercise.id,
+      name: exercise.name,
+      duration: exercise.duration,
+      calories: exercise.calories,
+      state: exercise.state,
+      date: exercise.date.getTime()
+    };
+  }
+
+  private exerciseWithTimestampToExercise(exercise: ExerciseWithTimestamp): Exercise {
+    return  {
+      id: exercise.id,
+      name: exercise.name,
+      duration: exercise.duration,
+      calories: exercise.calories,
+      state: exercise.state,
+      date: new Date(exercise.date)
+    };
   }
 }

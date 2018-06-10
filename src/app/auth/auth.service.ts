@@ -6,6 +6,8 @@ import { Router } from '@angular/router';
 import { FirebaseAuth } from 'angularfire2';
 import { AngularFireAuth } from 'angularfire2/auth';
 import { MatSnackBar } from '@angular/material';
+import { Store } from '@ngrx/store';
+import * as fromApp from '../app.reducer';
 
 @Injectable({
   providedIn: 'root'
@@ -16,11 +18,11 @@ export class AuthService {
 
   constructor(
     private router: Router,
-     private fbAuth: AngularFireAuth,
-    private snackBar: MatSnackBar) { }
+    private fbAuth: AngularFireAuth,
+    private snackBar: MatSnackBar,
+  private store: Store<{ui: fromApp.State}>) { }
 
   initAuthLestner() {
-    console.log('initAuthLestner');
     this.fbAuth.authState.subscribe(user => {
       if (user) {
         this.isAuthenticated = true;
@@ -37,19 +39,34 @@ export class AuthService {
   }
 
   registerUser(authData: AuthData): Promise<any> {
+    this.store.dispatch({type: 'START_LOADING'});
     return this.fbAuth.auth
     .createUserWithEmailAndPassword(authData.email, authData.password)
-    .catch(error => this.snackBar.open('No connection', null, {
+    .then(result => {
+      this.store.dispatch({type: 'STOP_LOADING'});
+      return result;
+    })
+    .catch(error => {
+      this.snackBar.open(error.message, null, {
       duration: 4000
-    }));
+    });
+    this.store.dispatch({type: 'STOP_LOADING'});
+  });
   }
 
   login(authData: AuthData): Promise<any> {
     return this.fbAuth.auth
     .signInWithEmailAndPassword(authData.email, authData.password)
-    .catch(error => this.snackBar.open('No connection', null, {
+    .then(result => {
+      this.store.dispatch({type: 'STOP_LOADING'});
+      return result;
+    })
+    .catch(error => {
+      this.snackBar.open(error.message, null, {
       duration: 4000
-    }));
+    });
+    this.store.dispatch({type: 'STOP_LOADING'});
+  });
   }
 
   logout() {
